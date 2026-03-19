@@ -66,9 +66,77 @@ async def upload_file(file: UploadFile= File(...), message: str=""):
 
     return {"message": "File uploaded successfully", "version": record.data[0]} 
 
-@app.get("files/{file_id}/versions")
+#get the version of file by name
+@app.get("/files/{filename}/versions")
 def get_versions(filename: str):
     result=supabase.table("file_versions").select("*").eq("original_name", filename).order("version", desc=False).execute()
+    
     if not result.data:
         raise HTTPException(status_code=404, detail="File not found")
-    return {"versions": result.data}
+    return {
+        "filename": filename,
+        "total_versions": len(result.data),
+        "versions": result.data
+    }
+
+#download the file
+@app.get("/files/{filename}/download/{version}")
+def download_version(filename: str, version: int):
+    result=supabase.table("file_versions").select("*").eq("original_name", filename).eq("version", version).execute()
+    
+    if not result.data:
+        raise HTTPException(status_code=404, detail="File version not found")
+    
+    record=result.data[0]
+
+    #temporary signed URL for download, expires in 1 hour
+    signed = supabase.storage.from_("papertrail-files").create_signed_url(record["storage_path"], expires_in=3600)   
+
+    return {
+        "filename": filename, 
+        "version": version, 
+        "download_url": signed["signedURL"],
+        "expires_in": "1hr",
+        "metadata": record
+    }
+
+@app.post("/files/{filename}/rollback/{version}")
+def rollback_version(filename: str, version: int, message: str = "Rollback"):
+    result = supabase.table("file_versions").select("*").eq("original_name", filename).eq("version", version).execute()
+
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Version not found")
+    
+    old_record = result.data[0]
+
+    #next version number should be
+    latest = supabase.table("file_versions").select("version").eq("original_name", filename).order("version", desc=True).limit(1).execute()
+    next_version = latest.data[0]["version"] + 1
+
+    #download the old file from storage
+    file_contents = supabase.storage.from_("papertrail-files").download(old_record["storage_path"])
+
+    #upload it back as a new version
+    new_storage_path = f"{filename}/v{next_version}_{filename}"
+    supabase.storage.from_("papertrail-files").upload(
+        path=new_storage_path,
+        file=file_contents,
+        file_options={"content-type": old_record["file_type"]}
+    )
+
+    new_record = supabase.table("file_versions").insert({
+        "original_name": filename,
+        "storage_path": new_storage_path,
+        "version": next_version,
+        "file_hash": old_record["file_hash"],
+        "file_size": old_record["file_size"],
+        "file_type": old_record["file_type"],
+        "message": f"{message} (from v{version})"
+    }).execute()
+
+    return {
+        "message": f"Rolled back to v{version}, saved as v{next_version}",
+        "new_version": next_version,
+        "data": new_record.data[0]
+    }
+
