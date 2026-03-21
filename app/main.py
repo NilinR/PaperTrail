@@ -7,6 +7,8 @@ import os
 import hashlib
 from supabase import create_client, Client
 
+from fastapi.middleware.cors import CORSMiddleware
+
 load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -140,3 +142,26 @@ def rollback_version(filename: str, version: int, message: str = "Rollback"):
         "data": new_record.data[0]
     }
 
+#so that the frontend can access the API without CORS issues during development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/files")
+def get_files():
+    result = supabase.table("file_versions") \
+        .select("original_name, file_type, file_size, created_at, version") \
+        .order("created_at", desc=True) \
+        .execute()
+
+    # Group by filename, keep only the latest version of each
+    seen = {}
+    for row in result.data:
+        name = row["original_name"]
+        if name not in seen or row["version"] > seen[name]["version"]:
+            seen[name] = row
+
+    return {"files": list(seen.values())}
