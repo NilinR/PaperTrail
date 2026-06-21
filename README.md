@@ -13,5 +13,9 @@ PaperTrail is a binary file version control system designed to efficiently manag
 - Improved CLI and UI
 - Advanced versioning features
 
+## Running the app
+- Start both services with `run-papertrail.ps1` from the repository root.
+- The script opens one console for the FastAPI backend and one for the Vite frontend.
+
 ## License
 MIT License
