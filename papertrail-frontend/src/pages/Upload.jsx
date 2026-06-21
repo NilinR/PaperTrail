@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+//state used for global var
 import axios from 'axios'
 import './Upload.css'
 
@@ -9,9 +10,11 @@ export default function Upload() {
   const [status, setStatus] = useState(null) // {type: 'success'|'error'|'duplicate', data}
   const [loading, setLoading] = useState(false)
   const inputRef = useRef()
+  //hide the input button so we can have the dropzone
 
   const handleDrop = (e) => {
     e.preventDefault()
+    //prevents from opening pdf which happens
     setDragging(false)
     const dropped = e.dataTransfer.files[0]
     if (dropped) setFile(dropped)
@@ -22,6 +25,7 @@ export default function Upload() {
     setLoading(true)
     setStatus(null)
     const form = new FormData()
+    //packages pdf as json
     form.append('file', file)
     form.append('message', message)
     

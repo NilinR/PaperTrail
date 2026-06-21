@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import ImageDiff from '../components/ImageDiff'
 import './Versions.css'
 
 export default function Versions() {
@@ -9,6 +10,25 @@ export default function Versions() {
   const [versions, setVersions] = useState([])
   const [loading, setLoading] = useState(true)
   const [actionStatus, setActionStatus] = useState(null)
+
+  const [diffMode, setDiffMode] = useState(false)
+  const [diffVersions, setDiffVersions] = useState({ v1: '', v2: '' })
+  const [diffData, setDiffData] = useState(null)
+  const [diffLoading, setDiffLoading] = useState(false)
+
+  const isImage = versions.length > 0 &&
+    ['image/jpeg', 'image/png', 'image/webp'].includes(versions[0]?.file_type)
+
+  const handleDiff = async () => {
+    if (!diffVersions.v1 || !diffVersions.v2) return
+    setDiffLoading(true)
+    setDiffData(null)
+    const res = await axios.get(
+      `http://localhost:8000/files/${encodeURIComponent(decoded)}/diff/${diffVersions.v1}/${diffVersions.v2}`
+    )
+    setDiffData(res.data)
+    setDiffLoading(false)
+  }
 
   const decoded = decodeURIComponent(filename)
 
@@ -77,6 +97,41 @@ export default function Versions() {
         </div>
       )}
 
+      {versions.length >= 2 && isImage && (
+        <div className="diff-section">
+          <div className="diff-controls">
+            <span className="diff-title">Visual Diff</span>
+            <select value={diffVersions.v1}
+              onChange={e => setDiffVersions(p => ({ ...p, v1: e.target.value }))}>
+              <option value="">Before</option>
+              {versions.map(v => (
+                <option key={v.id} value={v.version}>v{v.version} — {v.message || 'no note'}</option>
+              ))}
+            </select>
+            <span>→</span>
+            <select value={diffVersions.v2}
+              onChange={e => setDiffVersions(p => ({ ...p, v2: e.target.value }))}>
+              <option value="">After</option>
+              {versions.map(v => (
+                <option key={v.id} value={v.version}>v{v.version} — {v.message || 'no note'}</option>
+              ))}
+            </select>
+            <button className="btn-diff" onClick={handleDiff} disabled={!diffVersions.v1 || !diffVersions.v2 || diffLoading}>
+              {diffLoading ? 'Loading...' : 'Compare'}
+            </button>
+          </div>
+
+          {diffData && (
+            <ImageDiff
+              urlV1={diffData.v1.url}
+              urlV2={diffData.v2.url}
+              labelV1={`v${diffVersions.v1}`}
+              labelV2={`v${diffVersions.v2}`}
+            />
+          )}
+        </div>
+      )}
+      
       <div className="versions-timeline">
         {[...versions].reverse().map((v, i) => (
           <div key={v.id} className={`version-card ${i === 0 ? 'is-latest' : ''}`}>

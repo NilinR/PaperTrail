@@ -1,0 +1,87 @@
+.image-diff {
+  margin-top: 2rem;
+}
+
+.diff-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  cursor: col-resize;
+  user-select: none;
+  background: var(--surface);
+  max-height: 600px;
+}
+
+.diff-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  max-height: 600px;
+}
+
+.diff-after {
+  position: relative;
+  display: block;
+}
+
+.diff-before-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.diff-before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  max-width: 720px;
+}
+
+.diff-slider {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 2px;
+  background: var(--accent);
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.diff-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #000;
+  font-size: 0.9rem;
+  font-weight: 700;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+
+.diff-label {
+  position: absolute;
+  top: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: rgba(0,0,0,0.6);
+  padding: 0.25rem 0.6rem;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.diff-label-left { left: 1rem; color: var(--accent2); }
+.diff-label-right { right: 1rem; color: var(--accent); }

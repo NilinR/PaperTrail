@@ -17,7 +17,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 #MIME file check
-Allowed_types=['application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+Allowed_types=["application/pdf", "image/jpeg", "image/png", "image/webp"]
 
 app = FastAPI()
 
@@ -150,14 +150,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+#for listing all files
 @app.get("/files")
 def get_files():
-    result = supabase.table("file_versions") \
-        .select("original_name, file_type, file_size, created_at, version") \
-        .order("created_at", desc=True) \
-        .execute()
+    result = supabase.table("file_versions").select("original_name, file_type, file_size, created_at, version").order("created_at", desc=True).execute()
 
-    # Group by filename, keep only the latest version of each
+    #group by filename, keep only the latest version of each
     seen = {}
     for row in result.data:
         name = row["original_name"]
@@ -165,3 +163,25 @@ def get_files():
             seen[name] = row
 
     return {"files": list(seen.values())}
+
+#to compare two versions
+@app.get("/files/{filename}/diff/{v1}/{v2}")
+def get_diff_urls(filename: str, v1: int, v2: int):
+    def get_url(version):
+        result = supabase.table("file_versions") \
+            .select("*") \
+            .eq("original_name", filename) \
+            .eq("version", version) \
+            .execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail=f"Version {version} not found")
+        record = result.data[0]
+        signed = supabase.storage.from_("papertrail-files") \
+            .create_signed_url(record["storage_path"], expires_in=3600)
+        return {"url": signed["signedURL"], "metadata": record}
+
+    return {
+        "filename": filename,
+        "v1": get_url(v1),
+        "v2": get_url(v2)
+    }
