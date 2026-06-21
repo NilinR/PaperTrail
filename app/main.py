@@ -14,7 +14,17 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("SUPABASE_URL and SUPABASE_KEY must be set")
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+
+def get_cors_origins():
+    origins = os.getenv("CORS_ORIGINS")
+    if not origins:
+        return ["http://localhost:5173"]
+    return [origin.strip() for origin in origins.split(",") if origin.strip()]
 
 #MIME file check
 Allowed_types=["application/pdf", "image/jpeg", "image/png", "image/webp"]
@@ -145,7 +155,7 @@ def rollback_version(filename: str, version: int, message: str = "Rollback"):
 #so that the frontend can access the API without CORS issues during development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=get_cors_origins(),
     allow_methods=["*"],
     allow_headers=["*"],
 )

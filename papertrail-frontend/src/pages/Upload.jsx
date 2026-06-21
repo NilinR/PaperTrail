@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 //state used for global var
-import axios from 'axios'
+import { api } from '../lib/api'
 import './Upload.css'
 
 export default function Upload() {
@@ -30,7 +30,7 @@ export default function Upload() {
     form.append('message', message)
     
     try {
-      const res = await axios.post('http://localhost:8000/upload', form)
+      const res = await api.post('/upload', form)
       console.log('RESPONSE:', JSON.stringify(res.data))
       if (res.data.message.includes('already exists')) {
         setStatus({ type: 'duplicate', data: res.data })

@@ -17,5 +17,11 @@ PaperTrail is a binary file version control system designed to efficiently manag
 - Start both services with `run-papertrail.ps1` from the repository root.
 - The script opens one console for the FastAPI backend and one for the Vite frontend.
 
-## License
-MIT License
+## Vercel deployment
+- Deploy `papertrail-frontend` as one Vercel project.
+- Deploy the repository root as a separate Vercel Python service for the FastAPI backend.
+- Set `VITE_API_URL` in the frontend project to the backend service URL.
+- Set `SUPABASE_URL`, `SUPABASE_KEY`, and `CORS_ORIGINS` in the backend project.
+- The frontend already includes a rewrite rule so React Router routes load correctly on refresh.
+
+

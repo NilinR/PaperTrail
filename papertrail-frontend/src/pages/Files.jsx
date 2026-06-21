@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import { api } from '../lib/api'
 import './Files.css'
 
 export default function Files() {
@@ -9,7 +9,7 @@ export default function Files() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    axios.get('http://localhost:8000/files')
+    api.get('/files')
       .then(res => setFiles(res.data.files))
       .finally(() => setLoading(false))
   }, [])
@@ -35,7 +35,7 @@ export default function Files() {
         <span className="files-count">{files.length} file{files.length !== 1 ? 's' : ''}</span>
         <button className="refresh-btn" onClick={() => {
           setLoading(true)
-          axios.get('http://localhost:8000/files')
+          api.get('/files')
             .then(res => setFiles(res.data.files))
             .finally(() => setLoading(false))
         }}>↻ Refresh</button>

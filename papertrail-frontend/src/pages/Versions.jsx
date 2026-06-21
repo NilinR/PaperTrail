@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import { api } from '../lib/api'
 import ImageDiff from '../components/ImageDiff'
 import './Versions.css'
 
@@ -23,9 +23,7 @@ export default function Versions() {
     if (!diffVersions.v1 || !diffVersions.v2) return
     setDiffLoading(true)
     setDiffData(null)
-    const res = await axios.get(
-      `http://localhost:8000/files/${encodeURIComponent(decoded)}/diff/${diffVersions.v1}/${diffVersions.v2}`
-    )
+    const res = await api.get(`/files/${encodeURIComponent(decoded)}/diff/${diffVersions.v1}/${diffVersions.v2}`)
     setDiffData(res.data)
     setDiffLoading(false)
   }
@@ -34,7 +32,7 @@ export default function Versions() {
 
   const fetchVersions = () => {
     setLoading(true)
-    axios.get(`http://localhost:8000/files/${encodeURIComponent(decoded)}/versions`)
+    api.get(`/files/${encodeURIComponent(decoded)}/versions`)
       .then(res => setVersions(res.data.versions))
       .finally(() => setLoading(false))
   }
@@ -42,14 +40,14 @@ export default function Versions() {
   useEffect(() => { fetchVersions() }, [filename])
 
   const handleDownload = async (version) => {
-    const res = await axios.get(`http://localhost:8000/files/${encodeURIComponent(decoded)}/download/${version}`)
+    const res = await api.get(`/files/${encodeURIComponent(decoded)}/download/${version}`)
     window.open(res.data.download_url, '_blank')
   }
 
   const handleRollback = async (version) => {
     setActionStatus({ type: 'loading', message: `Rolling back to v${version}...` })
     try {
-      const res = await axios.post(`http://localhost:8000/files/${encodeURIComponent(decoded)}/rollback/${version}`)
+      const res = await api.post(`/files/${encodeURIComponent(decoded)}/rollback/${version}`)
       setActionStatus({ type: 'success', message: `Rolled back! Saved as v${res.data.new_version}` })
       fetchVersions()
     } catch {
