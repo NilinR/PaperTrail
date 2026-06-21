@@ -1,0 +1,17 @@
+name: Keep services alive
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'
+  workflow_dispatch: {}
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run keepalive script
+        env:
+          KEEPALIVE_URLS: ${{ secrets.KEEPALIVE_URLS }}
+        run: python keepalive.py
