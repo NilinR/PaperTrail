@@ -1,17 +1,28 @@
-name: Keep services alive
+name: Keep Supabase Alive
 
 on:
   schedule:
-    - cron: '0 0 1 * *'
-  workflow_dispatch: {}
+    - cron: '0 0 1 * *'  # First day of every month at 00:00 UTC
+  workflow_dispatch:
 
 jobs:
   keepalive:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install supabase
+
       - name: Run keepalive script
         env:
-          KEEPALIVE_URLS: ${{ secrets.KEEPALIVE_URLS }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: python keepalive.py
