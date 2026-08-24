@@ -2,7 +2,10 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC
+    # Every 3 days at 00:00 UTC (5:30 AM IST)
+    - cron: '0 0 */3 * *'
+
+  # Allows manual testing from GitHub Actions
   workflow_dispatch:
 
 jobs:
@@ -14,14 +17,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Install dependencies
         run: pip install supabase
 
-      - name: Run keepalive script
+      - name: Run keepalive
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
